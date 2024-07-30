@@ -4,10 +4,11 @@ const calculatorValue = ref('');
 const operator = ref(null);
 const previousCalculatorValue = ref('');
 const calculatorElements = ['AC','+/-','%','/',7,8,9,'*',4,5,6,'-',1,2,3,'+',0,'.','='];
+const history_results = ref([])
 
 function action(n) {
   if (!isNaN(n) || n === '.') {
-    if (this.operator != null) {
+    if (this.operator != null && this.calculatorValue != '-') {
       this.calculatorValue = n + '';
     }
     else {
@@ -21,19 +22,28 @@ function action(n) {
     this.calculatorValue = this.calculatorValue / 100 + '';
   }
   if (['/','*','+','-'].includes(n)) {
-    this.operator = n;
-    this.previousCalculatorValue = this.calculatorValue;
+    if (this.calculatorValue != '' && this.previousCalculatorValue == '') {
+      this.operator = n;
+      this.previousCalculatorValue = this.calculatorValue;
+    }
+    else if (n === '-') {
+      this.calculatorValue = n + '';
+    }
   }
   if (n === '=') {
     this.calculatorValue = eval(
       this.previousCalculatorValue + this.operator + this.calculatorValue
     );
+    this.history_results.unshift(this.calculatorValue)
     this.previousCalculatorValue = '';
     this.operator = null;
   }
   if (n === '+/-') {
     if (this.calculatorValue > 0) {
       this.calculatorValue = '-' + this.calculatorValue
+    }
+    else {
+      this.calculatorValue = this.calculatorValue*-1
     }
   }
 }
@@ -46,14 +56,23 @@ function action(n) {
       {{ calculatorValue }}
     </div>
     <div class="row no-gutters">
-      <div class="col-3" v-for="n in calculatorElements" :key="n">
+      <div class="col-3" v-for="n in calculatorElements" :key="n"
+        :class="{'zero' : n === 0}"
+      >
         <div class="lead text-white text-center m-1 py-3 bg-vue-dark rounded hover-class"
-          :class="{'bg-vue-green' : ['/','*','+','=','-'].includes(n)}"
+          :class="{'bg-vue-orange' : ['/','*','+','=','-'].includes(n),
+            'bg-vue-grey' : ['AC','+/-','%'].includes(n)
+          }"
           @click="action(n)"
         >
           {{ n }}
         </div>
       </div>
+    </div>
+  </div>
+  <div class="history text-center text-white">
+    <div class="result_element" v-for="n in history_results" :key="n">
+      {{ n }}
     </div>
   </div>
 </template>
@@ -71,10 +90,13 @@ function action(n) {
     cursor: pointer;
     background: #3D5875;
   }
-  .bg-vue-green {
-    background: #3fb984;
+  .bg-vue-orange {
+    background: #bd8611;
   }
   .bg-vue-grey {
-    background: #616870;
+    background: #8f9ba8;
+  }
+  .zero {
+    width: 50%;
   }
 </style>
